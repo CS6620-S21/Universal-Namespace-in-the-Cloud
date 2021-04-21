@@ -23,13 +23,16 @@
 # To delete image stream tag
 # >>> oc delete is/<image_stream_tag_name>
 
+# To delete persistent volume claim
+# >>> oc delete pvc/<persistent_volume_claim_name>
+
 # The oc client needs to be the latest version, the current version is 4.7.2
 
 # Template to deploy upspin server
 kind: Template
 apiVersion: v1
 metadata:
-  name: jp-template-volume
+  name: jp-template-pvc
 
 # Image stream object
 objects:
@@ -180,30 +183,45 @@ objects:
         weight: 100
       wildcardPoloicy: None
 
+# Persistent Volume Claim, for provisioning storage for the cluster
+# a request for a recourse to be matched with available Persistent Volume
+  - apiVersion: "v1"
+    kind: "PersistentVolumeClaim"
+    metadata:
+      name: ${{PVC_NAME}}
+    spec:
+      accessModes:
+        - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: "1Gi"
+      # No specific PV specified; rely on normal matching and binding process
+      volumeName: 
+
 # Change these parameters according to your needs
 parameters:
 - name: DEPLOYMENT_NAME
-  value: upspin-jp-volume
+  value: upspin-jp-pvc
   required: true
 
 - name: IMAGE
-  value: upspinio/upspin:upspin-jp-volume11
+  value: upspinio/upspin:upspin-jp-pvc
   required: true
 
 # Dockerhub image tag
 - name: IMAGE_TAG
-  value: upspin-jp-volume11
+  value: upspin-jp-pvc
 
 - name: ROUTE_NAME
-  value: upspin-jp-volume-cname
+  value: upspin-jp-pvc-cname
   required: true
 
 - name: HOST_NAME
-  value: jp-vo.mocupspin.com
+  value: jp-pvc.mocupspin.com
   required: true
 
 - name: OPENSHIFT_HOST_NAME
-  value: upspin-jp-volume-cs6620-sp2021-universal-namespace.k-apps.osh.massopen.cloud
+  value: upspin-jp-pvc-cs6620-sp2021-universal-namespace.k-apps.osh.massopen.cloud
   required: true
 
 - name: SOURCE_SSL_PORT
@@ -217,7 +235,7 @@ parameters:
 # Created PVC with 10GB, type as RWO, on OpenShift storage
 # Currently don't need to change the value of "upspin-storage-rwo"
 - name: PVC_NAME
-  value: upspin-storage-rwo
+  value: upspin-jp-pvc-rwo
   required: true
 
 - name: MOUNT_PATH
